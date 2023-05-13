@@ -5,3 +5,10 @@ Het is een simpele CRUD applicatie dat boeken en auteuren kan bijhouden.
 
 De applicatie bevat de volgende endpoints:
 <img src="./img/endpoints.png" alt="image endpoints" />
+
+## Usage
+* Installeer Java 17
+* Installeer Maven
+* Maak een postgresql databank
+* Vervang postgresql config in application.properties
+* Run: mvn clean spring-boot:run
