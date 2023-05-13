@@ -11,4 +11,5 @@ De applicatie bevat de volgende endpoints:
 * Installeer Maven
 * Maak een postgresql databank
 * Vervang postgresql config in application.properties
+* Installeer de dependencies: **mvn clean install**
 * Run: **mvn clean spring-boot:run**
