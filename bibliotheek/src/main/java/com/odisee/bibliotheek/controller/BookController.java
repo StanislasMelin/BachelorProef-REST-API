@@ -7,15 +7,14 @@ import java.util.stream.Collectors;
 
 import com.odisee.bibliotheek.dto.BookRestModel;
 import com.odisee.bibliotheek.exception.AuthorNotFoundException;
+import com.odisee.bibliotheek.model.BookContent;
+import com.odisee.bibliotheek.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 
 import com.odisee.bibliotheek.repository.BookRepository;
 import com.odisee.bibliotheek.repository.AuthorRepository;
@@ -25,16 +24,19 @@ import com.odisee.bibliotheek.model.Author;
 
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.web.multipart.MultipartFile;
+
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
-
+@Slf4j
 @RestController
 @RequiredArgsConstructor // This will create a constructor for all the needed dependencies
 public class BookController {
     // Dependency injection in Spring Boot
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
+    private final FileStorageService fileStorageService;
 
     // Aggregate root
     // tag::get-aggregate-root[]
@@ -81,7 +83,7 @@ public class BookController {
                     toUpdate.setIsbn(newBook.getIsbn());
                     toUpdate.setYear(newBook.getYear());
                     toUpdate.setLanguage(newBook.getLanguage());
-                    toUpdate.setAuthorSet(newBook.getAuthorSet(authorRepository));
+                    toUpdate.setAuthors(newBook.getAuthors(authorRepository));
 
                     return bookRepository.save(toUpdate);
 
@@ -100,4 +102,8 @@ public class BookController {
     void deleteBook(@PathVariable Long id) {
         bookRepository.deleteById(id);
     }
+
+
+
+
 }

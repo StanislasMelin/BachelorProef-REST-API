@@ -29,5 +29,7 @@ public class Book {
     @NonNull private String language;
     // Author field - we must add annotations to define the relationship between those two objects.
     @ManyToMany(targetEntity = Author.class)
-    @NonNull private Set authorSet;
+    @JoinTable(inverseJoinColumns=@JoinColumn(name="authors"))
+
+    @NonNull private Set authors;
 }

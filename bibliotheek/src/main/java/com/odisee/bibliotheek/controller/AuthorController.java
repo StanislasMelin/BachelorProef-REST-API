@@ -24,6 +24,10 @@ import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+/*
+    This is the AuthorController. The CRUD endpoints for
+    the authors are defined in this file.
+ */
 
 @RestController
 @RequiredArgsConstructor // This will create a constructor for all the needed dependencies
@@ -48,14 +52,17 @@ public class AuthorController {
 
     // end::get-aggregate-root[]
     @PostMapping("/authors")
-    Author newAuthor(@RequestBody Author newAuthor) {
-        return authorRepository.save(newAuthor);
+    EntityModel<Author> newAuthor(@RequestBody Author newAuthor) {
+        Author author = authorRepository.save(newAuthor);
+
+        return EntityModel.of(author, //
+                linkTo(methodOn(AuthorController.class).one(author.getId())).withSelfRel(),
+                linkTo(methodOn(AuthorController.class).all()).withRel("authors"));
     }
 
     // Single item
     @GetMapping("/authors/{id}")
     EntityModel<Author> one(@PathVariable Long id) {
-
         Author author = authorRepository.findById(id) //
                 .orElseThrow(() -> new AuthorNotFoundException(id));
 
@@ -65,18 +72,21 @@ public class AuthorController {
     }
 
     @PutMapping("/authors/{id}")
-    Author replaceAuthor(@RequestBody Author newAuthor, @PathVariable Long id) {
-
-        return authorRepository.findById(id)
-                .map(author -> {
-                    author.setFirstName(newAuthor.getFirstName());
-                    author.setLastName(newAuthor.getLastName());
-                    return authorRepository.save(author);
+    EntityModel<Author> replaceAuthor(@RequestBody Author newAuthor, @PathVariable Long id) {
+        Author author =  authorRepository.findById(id)
+                .map(toUpdate -> {
+                    toUpdate.setFirstName(newAuthor.getFirstName());
+                    toUpdate.setLastName(newAuthor.getLastName());
+                    return authorRepository.save(toUpdate);
                 })
                 .orElseGet(() -> {
                     newAuthor.setId(id);
                     return authorRepository.save(newAuthor);
                 });
+
+        return EntityModel.of(author, //
+                linkTo(methodOn(AuthorController.class).one(id)).withSelfRel(),
+                linkTo(methodOn(AuthorController.class).all()).withRel("authors"));
     }
 
     @DeleteMapping("/authors/{id}")

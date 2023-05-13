@@ -11,6 +11,13 @@ import org.springframework.stereotype.Component;
 import java.util.HashSet;
 import java.util.Set;
 
+/*
+    This class is used to post or put books. It abstracts
+    having to deal with sending authors along the request.
+    User can send an array of author id's instead.
+    Heavy use of lombok to abstract the boring stuff.
+ */
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -36,12 +43,12 @@ public class BookRestModel {
                 this.getIsbn(),
                 this.getYear(),
                 this.getLanguage(),
-                this.getAuthorSet(authorRepository));
+                this.getAuthors(authorRepository));
 
         return book;
     }
 
-    public Set<Author> getAuthorSet(AuthorRepository authorRepository) {
+    public Set<Author> getAuthors(AuthorRepository authorRepository) {
         //Defining authorsets
         Set<Author> authors = new HashSet();
         for (int i = 0;i<this.getAuthors_id().length;i++) {
