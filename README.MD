@@ -13,3 +13,7 @@ De applicatie bevat de volgende endpoints:
 * Vervang postgresql config in application.properties
 * Installeer de dependencies: **mvn clean install**
 * Run: **mvn clean spring-boot:run**
+
+## Stress test usage
+* Install K6 (<a href="https://k6.io/docs/get-started/installation/">link</a>)
+* 
