@@ -4,3 +4,4 @@ Het is een simpele CRUD applicatie dat boeken en auteuren kan bijhouden.
 
 
 De applicatie bevat de volgende endpoints:
+<img src="./img/endpoints.png" alt="image endpoints" />
