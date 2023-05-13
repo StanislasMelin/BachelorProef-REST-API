@@ -15,5 +15,5 @@ De applicatie bevat de volgende endpoints:
 * Run: **mvn clean spring-boot:run**
 
 ## Stress test usage
-* Install K6 (<a href="https://k6.io/docs/get-started/installation/">link</a>)
+* Install K6 (<a href="https://k6.io/docs/get-started/installation/" target="_blank">link</a>)
 * 
