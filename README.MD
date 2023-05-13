@@ -16,4 +16,5 @@ De applicatie bevat de volgende endpoints:
 
 ## Stress test usage
 * Install K6 (<a href="https://k6.io/docs/get-started/installation/" target="_blank">link</a>)
-* 
+* Navigate to **scripts/** directory
+* run: **k6 run ./k6-stress-test.js**
