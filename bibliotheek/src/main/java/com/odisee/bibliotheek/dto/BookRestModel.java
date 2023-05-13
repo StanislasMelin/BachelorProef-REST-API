@@ -33,7 +33,7 @@ public class BookRestModel {
     @NonNull private String isbn;
     @NonNull private String year;
     @NonNull private String language;
-    @NonNull private int[] authors_id;
+    @NonNull private long[] authors_id;
 
     public Book toModel(AuthorRepository authorRepository) {
         // Creating new books
