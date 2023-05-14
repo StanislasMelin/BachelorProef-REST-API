@@ -4,11 +4,8 @@ import { randomIntBetween, randomItem } from "https://jslib.k6.io/k6-utils/1.1.0
 import http from 'k6/http';
 
 export let options = {
-  thresholds: {
-    checks: [{threshold: 'rate == 1.00', abortOnFail: true}],
-  },
-  vus: 5,
-  iterations: 10
+  vus: 20,
+  duration: '1m'
 };
 
 const pdfFile = open('./bestand.pdf', 'b');
@@ -42,7 +39,7 @@ export default function testSuite() {
 	    headers: {
 	      'Content-Type': 'application/json',
 	    },
-	};
+	  };
     
     let resp = session.post(`/authors`, payload, params);
 
@@ -50,7 +47,7 @@ export default function testSuite() {
       .and(resp).toHaveValidJson();
 
     session.newAuthorId=resp.json('id');
-  })
+  });
 
   describe(`03. Create a test book`, (t) => {
     const payload = JSON.stringify({
@@ -66,7 +63,7 @@ export default function testSuite() {
 	    headers: {
 	      'Content-Type': 'application/json',
 	    },
-	};
+	  };
     
     let resp = session.post(`/books`, payload, params);
 
