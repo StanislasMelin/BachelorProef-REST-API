@@ -111,7 +111,7 @@ export default function testSuite() {
       .and(resp).toHaveValidJson();
   })
 
-  describe('08. Fetch book content', (t) => {
+  describe('08. List all authors', (t) => {
 
     let resp = session.get(`/authors`);
 
