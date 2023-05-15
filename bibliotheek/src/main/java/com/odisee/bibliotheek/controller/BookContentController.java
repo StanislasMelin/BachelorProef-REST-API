@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,7 +45,16 @@ public class BookContentController {
 
         BookContent bookContent = null;
         try {
-            bookContent = fileStorageService.store(id, file);
+            // Make asynchronous call to the service
+            CompletableFuture<BookContent> completableFuture = fileStorageService.store(id, file);
+
+            // Wait for it to be done calculating.. The heavy work happens in another thread.
+            // The service can handle other requests in the meantime.
+            CompletableFuture.allOf(completableFuture).join();
+
+            // Get the result of the async computation
+            bookContent = completableFuture.get();
+
         } catch(Exception ex) {
             log.error(ex.getMessage());
         }

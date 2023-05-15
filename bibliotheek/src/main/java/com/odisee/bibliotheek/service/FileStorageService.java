@@ -2,6 +2,7 @@ package com.odisee.bibliotheek.service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import com.odisee.bibliotheek.exception.BookContentNotFoundException;
@@ -15,6 +16,7 @@ import com.odisee.bibliotheek.repository.BookRepository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,7 +31,8 @@ public class FileStorageService {
 
     // This function will fetch a book and create a bookcontent object
     // To store it in the database.
-    public BookContent store(Long bookId, MultipartFile file) throws IOException {
+    @Async("taskExecutor")
+    public CompletableFuture<BookContent> store(Long bookId, MultipartFile file) throws Exception {
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
         log.info("Searching for book...");
         // Fetching book. Throwing 404 if book is not found.
@@ -46,7 +49,9 @@ public class FileStorageService {
         );
         log.info("Saving book content...");
         // Saving it to DB
-        return bookContentRepository.save(bookContent);
+        BookContent results = bookContentRepository.save(bookContent);
+
+        return CompletableFuture.completedFuture(results);
     }
 
     public BookContent getContent(String id) {
