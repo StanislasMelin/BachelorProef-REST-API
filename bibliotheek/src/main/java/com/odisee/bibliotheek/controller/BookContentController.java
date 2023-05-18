@@ -40,9 +40,6 @@ public class BookContentController {
 
     @PostMapping(value = "/books/{id}/content", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public EntityModel<BookContent> uploadContent(@RequestParam("file") MultipartFile file, @PathVariable Long id) {
-        log.info("Request incoming: POST /books/content/"+id);
-
-
         BookContent bookContent = null;
         try {
             // Make asynchronous call to the service
