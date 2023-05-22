@@ -8,10 +8,12 @@ import java.util.stream.Collectors;
 import com.odisee.bibliotheek.dto.BookRestModel;
 import com.odisee.bibliotheek.exception.AuthorNotFoundException;
 import com.odisee.bibliotheek.model.BookContent;
+import com.odisee.bibliotheek.service.BookService;
 import com.odisee.bibliotheek.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -34,18 +36,17 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequiredArgsConstructor // This will create a constructor for all the needed dependencies
 public class BookController {
     // Dependency injection in Spring Boot
-    private final BookRepository bookRepository;
-    private final AuthorRepository authorRepository;
-    private final FileStorageService fileStorageService;
+    @Autowired
+    private final BookService bookService;
 
     // Aggregate root
     // tag::get-aggregate-root[]
     @GetMapping("/books")
     CollectionModel<EntityModel<Book>> all() {
 
-        List<EntityModel<Book>> employees = bookRepository.findAll().stream()
-                .map(employee -> EntityModel.of(employee,
-                        linkTo(methodOn(BookController.class).one(employee.getId())).withSelfRel(),
+        List<EntityModel<Book>> employees = bookService.findAll().stream()
+                .map(book -> EntityModel.of(book,
+                        linkTo(methodOn(BookController.class).one(book.getId())).withSelfRel(),
                         linkTo(methodOn(BookController.class).all()).withRel("books")))
                 .collect(Collectors.toList());
 
@@ -55,7 +56,7 @@ public class BookController {
     // end::get-aggregate-root[]
     @PostMapping("/books")
     EntityModel<Book> newBook(@RequestBody BookRestModel newBook) {
-        Book book = bookRepository.save(newBook.toModel(authorRepository));
+        Book book = bookService.save(newBook);
 
         return EntityModel.of(book, //
                 linkTo(methodOn(BookController.class).one(book.getId())).withSelfRel(),
@@ -66,8 +67,7 @@ public class BookController {
     @GetMapping("/books/{id}")
     EntityModel<Book> one(@PathVariable Long id) {
 
-        Book book = bookRepository.findById(id) //
-                .orElseThrow(() -> new BookNotFoundException(id));
+        Book book = bookService.findById(id);
 
         return EntityModel.of(book, //
                 linkTo(methodOn(BookController.class).one(id)).withSelfRel(),
@@ -75,23 +75,8 @@ public class BookController {
     }
 
     @PutMapping("/books/{id}")
-    EntityModel<Book> replaceBook(@RequestBody BookRestModel newBook, @PathVariable Long id) {
-         Book book = bookRepository.findById(id)
-                .map(toUpdate -> {
-                    toUpdate.setTitle(newBook.getTitle());
-                    toUpdate.setPages(newBook.getPages());
-                    toUpdate.setIsbn(newBook.getIsbn());
-                    toUpdate.setYear(newBook.getYear());
-                    toUpdate.setLanguage(newBook.getLanguage());
-                    toUpdate.setAuthors(newBook.getAuthors(authorRepository));
-
-                    return bookRepository.save(toUpdate);
-
-                })
-                .orElseGet(() -> {
-                    newBook.setId(id);
-                    return bookRepository.save(newBook.toModel(authorRepository));
-                });
+    EntityModel<Book> updateBook(@RequestBody BookRestModel newBook, @PathVariable Long id) {
+        Book book = bookService.update(id, newBook);
 
         return EntityModel.of(book, //
                 linkTo(methodOn(BookController.class).one(book.getId())).withSelfRel(),
@@ -100,10 +85,6 @@ public class BookController {
 
     @DeleteMapping("/books/{id}")
     void deleteBook(@PathVariable Long id) {
-        bookRepository.deleteById(id);
+        bookService.delete(id);
     }
-
-
-
-
 }
