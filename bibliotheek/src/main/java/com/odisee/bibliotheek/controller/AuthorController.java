@@ -3,8 +3,10 @@ package com.odisee.bibliotheek.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.odisee.bibliotheek.service.AuthorService;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,16 +34,15 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RestController
 @RequiredArgsConstructor // This will create a constructor for all the needed dependencies
 public class AuthorController {
-    // Dependency injection in Spring Boot
-    private final BookRepository bookRepository;
-    private final AuthorRepository authorRepository;
+    @Autowired
+    private final AuthorService authorService;
 
     // Aggregate root
     // tag::get-aggregate-root[]
     @GetMapping("/authors")
     CollectionModel<EntityModel<Author>> all() {
 
-        List<EntityModel<Author>> employees = authorRepository.findAll().stream()
+        List<EntityModel<Author>> employees = authorService.findAll().stream()
                 .map(employee -> EntityModel.of(employee,
                         linkTo(methodOn(AuthorController.class).one(employee.getId())).withSelfRel(),
                         linkTo(methodOn(AuthorController.class).all()).withRel("authors")))
@@ -53,7 +54,7 @@ public class AuthorController {
     // end::get-aggregate-root[]
     @PostMapping("/authors")
     EntityModel<Author> newAuthor(@RequestBody Author newAuthor) {
-        Author author = authorRepository.save(newAuthor);
+        Author author = authorService.save(newAuthor);
 
         return EntityModel.of(author, //
                 linkTo(methodOn(AuthorController.class).one(author.getId())).withSelfRel(),
@@ -63,8 +64,7 @@ public class AuthorController {
     // Single item
     @GetMapping("/authors/{id}")
     EntityModel<Author> one(@PathVariable Long id) {
-        Author author = authorRepository.findById(id) //
-                .orElseThrow(() -> new AuthorNotFoundException(id));
+        Author author = authorService.findById(id);
 
         return EntityModel.of(author, //
                 linkTo(methodOn(AuthorController.class).one(id)).withSelfRel(),
@@ -73,16 +73,7 @@ public class AuthorController {
 
     @PutMapping("/authors/{id}")
     EntityModel<Author> replaceAuthor(@RequestBody Author newAuthor, @PathVariable Long id) {
-        Author author =  authorRepository.findById(id)
-                .map(toUpdate -> {
-                    toUpdate.setFirstName(newAuthor.getFirstName());
-                    toUpdate.setLastName(newAuthor.getLastName());
-                    return authorRepository.save(toUpdate);
-                })
-                .orElseGet(() -> {
-                    newAuthor.setId(id);
-                    return authorRepository.save(newAuthor);
-                });
+        Author author =  authorService.update(id, newAuthor);
 
         return EntityModel.of(author, //
                 linkTo(methodOn(AuthorController.class).one(id)).withSelfRel(),
@@ -91,6 +82,6 @@ public class AuthorController {
 
     @DeleteMapping("/authors/{id}")
     void deleteAuthor(@PathVariable Long id) {
-        authorRepository.deleteById(id);
+        authorService.delete(id);
     }
 }
