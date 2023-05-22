@@ -15,6 +15,9 @@ import com.odisee.bibliotheek.repository.BookRepository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,14 +32,18 @@ public class FileStorageService {
 
     // This function will fetch a book and create a bookcontent object
     // To store it in the database.
+    @Caching(evict = {
+            @CacheEvict(value = "bookContents", allEntries = true),
+            @CacheEvict(value = "bookContent", allEntries = true)
+    })
     public BookContent store(Long bookId, MultipartFile file) throws IOException {
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-        log.info("Searching for book...");
+        //log.info("Searching for book...");
         // Fetching book. Throwing 404 if book is not found.
         Book book = bookRepository
                 .findById(bookId)
                 .orElseThrow(()-> new BookNotFoundException(bookId));
-        log.info("Book found: " + book.toString());
+        //log.info("Book found: " + book.toString());
 
         BookContent bookContent = new BookContent(
             book,
@@ -49,10 +56,12 @@ public class FileStorageService {
         return bookContentRepository.save(bookContent);
     }
 
+    @Cacheable(value = "bookContent")
     public BookContent getContent(String id) {
         return bookContentRepository.findById(id).orElse(null);
     }
 
+    @Cacheable(value = "bookContent")
     public BookContent getContent(Long bookId) {
         log.info("Searching for book...");
         Book book = bookRepository.findById(bookId).orElse(null);
@@ -65,10 +74,15 @@ public class FileStorageService {
         return bookContentRepository.findDistinctByBook(book);
     }
 
+    @Cacheable(value="bookContents")
     public List<BookContent> getAllFiles() {
         return bookContentRepository.findAll();
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "bookContents", allEntries = true),
+            @CacheEvict(value = "bookContent", allEntries = true)
+    })
     public void deleteContent(Long id) {
         BookContent bc = this.getContent(id);
         if(bc == null) return;
