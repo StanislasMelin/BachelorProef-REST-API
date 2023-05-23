@@ -10,7 +10,7 @@ export let options = {
 
 const pdfFile = open('./bestand.pdf', 'b');
 
-let session = new Httpx({baseURL: 'http://localhost:8080'});
+let session = new Httpx({baseURL: 'http://localhost:80'});
 
 export default function testSuite() {
 
