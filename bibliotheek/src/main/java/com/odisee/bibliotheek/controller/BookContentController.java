@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,16 +39,8 @@ public class BookContentController {
     private final FileStorageService fileStorageService;
 
     @PostMapping(value = "/books/{id}/content", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public EntityModel<BookContent> uploadContent(@RequestParam("file") MultipartFile file, @PathVariable Long id) {
-        log.info("Request incoming: POST /books/content/"+id);
-
-
-        BookContent bookContent = null;
-        try {
-            bookContent = fileStorageService.store(id, file);
-        } catch(Exception ex) {
-            log.error(ex.getMessage());
-        }
+    public EntityModel<BookContent> uploadContent(@RequestParam("file") MultipartFile file, @PathVariable Long id) throws IOException {
+        BookContent bookContent = fileStorageService.store(id, file);
 
         return EntityModel.of(bookContent, //
                 linkTo(methodOn(BookController.class).one(bookContent.getBook().getId())).withSelfRel(),
