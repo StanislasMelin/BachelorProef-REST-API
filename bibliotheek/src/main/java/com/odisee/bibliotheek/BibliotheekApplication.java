@@ -13,7 +13,7 @@ public class BibliotheekApplication {
 	public static void main(String[] args) {
 
 		SpringApplication.run(BibliotheekApplication.class, args);
-		log.info("Running non-optimized base REST API.");
+		log.info("Running load balanced REST API.");
 	}
 
 }

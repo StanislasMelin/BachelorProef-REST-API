@@ -67,7 +67,7 @@ export default function testSuite() {
     
     let resp = session.post(`/books`, payload, params);
 
-    t.expect(resp.status).as("content creation status").toEqual(200)
+    t.expect(resp.status).as("Book creation status").toEqual(200)
       .and(resp).toHaveValidJson();
 
     session.newBookId=resp.json('id');
