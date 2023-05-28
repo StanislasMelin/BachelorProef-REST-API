@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,12 +40,18 @@ public class BookContentController {
 
     @PostMapping(value = "/books/{id}/content", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public EntityModel<BookContent> uploadContent(@RequestParam("file") MultipartFile file, @PathVariable Long id) {
-        log.info("Request incoming: POST /books/content/"+id);
-
-
         BookContent bookContent = null;
         try {
-            bookContent = fileStorageService.store(id, file);
+            // Make asynchronous call to the service
+            CompletableFuture<BookContent> completableFuture = fileStorageService.store(id, file);
+
+            // Wait for it to be done calculating.. The heavy work happens in another thread.
+            // The service can handle other requests in the meantime.
+            CompletableFuture.allOf(completableFuture).join();
+
+            // Get the result of the async computation
+            bookContent = completableFuture.get();
+
         } catch(Exception ex) {
             log.error(ex.getMessage());
         }
@@ -70,7 +77,23 @@ public class BookContentController {
     @GetMapping("/books/content")
     public CollectionModel<EntityModel<BookContent>> all() {
         log.info("Listing all book contents...");
-        List<EntityModel<BookContent>> bookContents = fileStorageService.getAllFiles().stream()
+        List<BookContent> results = null;
+        try {
+            // Make asynchronous call to the service
+            CompletableFuture<List<BookContent>> completableFuture = fileStorageService.getAllFiles();
+
+            // Wait for it to be done calculating.. The heavy work happens in another thread.
+            // The service can handle other requests in the meantime.
+            CompletableFuture.allOf(completableFuture).join();
+
+            // Get the result of the async computation
+            results = completableFuture.get();
+
+        } catch(Exception ex) {
+            log.error(ex.getMessage());
+        }
+
+        List<EntityModel<BookContent>> bookContents = results.stream()
                 .map(bookContent -> EntityModel.of(bookContent,
                         linkTo(methodOn(BookController.class).one(bookContent.getBook().getId())).withSelfRel(),
                         linkTo(methodOn(BookContentController.class).all()).withRel("books")))

@@ -7,6 +7,7 @@ import com.odisee.bibliotheek.repository.AuthorRepository;
 import com.odisee.bibliotheek.repository.BookRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,19 +21,29 @@ public class BookService {
     @Autowired
     private AuthorRepository authorRepository;
 
+    @Cacheable(value = "books")
     public List<Book> findAll() {
         return bookRepository.findAll();
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "books", allEntries = true),
+            @CacheEvict(value = "book", allEntries = true)
+    })
     public Book save(BookRestModel model) {
         return bookRepository.save(model.toModel(authorRepository));
     }
 
+    @Cacheable(value = "book")
     public Book findById(long id) {
         return bookRepository.findById(id) //
                 .orElseThrow(() -> new BookNotFoundException(id));
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "books", allEntries = true),
+            @CacheEvict(value = "book", allEntries = true)
+    })
     public Book update(long id, BookRestModel newBook) {
         return bookRepository.findById(id)
                 .map(toUpdate -> {
@@ -52,6 +63,10 @@ public class BookService {
                 });
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "books", allEntries = true),
+            @CacheEvict(value = "book", allEntries = true)
+    })
     public void delete(long id) {
         bookRepository.deleteById(id);
     }

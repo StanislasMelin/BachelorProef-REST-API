@@ -2,6 +2,7 @@ package com.odisee.bibliotheek.service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import com.odisee.bibliotheek.exception.BookContentNotFoundException;
@@ -15,6 +16,10 @@ import com.odisee.bibliotheek.repository.BookRepository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,7 +34,12 @@ public class FileStorageService {
 
     // This function will fetch a book and create a bookcontent object
     // To store it in the database.
-    public BookContent store(Long bookId, MultipartFile file) throws IOException {
+    @Caching(evict = {
+            @CacheEvict(value = "bookContents", allEntries = true),
+            @CacheEvict(value = "bookContent", allEntries = true)
+    })
+    @Async("taskExecutor")
+    public CompletableFuture<BookContent> store(Long bookId, MultipartFile file) throws Exception {
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
         log.info("Searching for book...");
         // Fetching book. Throwing 404 if book is not found.
@@ -39,20 +49,24 @@ public class FileStorageService {
         log.info("Book found: " + book.toString());
 
         BookContent bookContent = new BookContent(
-            book,
-            fileName,
-            file.getContentType(),
-            file.getBytes()
+                book,
+                fileName,
+                file.getContentType(),
+                file.getBytes()
         );
         log.info("Saving book content...");
         // Saving it to DB
-        return bookContentRepository.save(bookContent);
+        BookContent results = bookContentRepository.save(bookContent);
+
+        return CompletableFuture.completedFuture(results);
     }
 
+    @Cacheable(value = "bookContent")
     public BookContent getContent(String id) {
         return bookContentRepository.findById(id).orElse(null);
     }
 
+    @Cacheable(value = "bookContent")
     public BookContent getContent(Long bookId) {
         log.info("Searching for book...");
         Book book = bookRepository.findById(bookId).orElse(null);
@@ -65,10 +79,19 @@ public class FileStorageService {
         return bookContentRepository.findDistinctByBook(book);
     }
 
-    public List<BookContent> getAllFiles() {
-        return bookContentRepository.findAll();
+    @Cacheable(value="bookContents")
+    @Async("taskExecutor")
+    public CompletableFuture<List<BookContent>> getAllFiles() {
+
+        List<BookContent> results =  bookContentRepository.findAll();
+
+        return CompletableFuture.completedFuture(results);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "bookContents", allEntries = true),
+            @CacheEvict(value = "bookContent", allEntries = true)
+    })
     public void deleteContent(Long id) {
         BookContent bc = this.getContent(id);
         if(bc == null) return;
