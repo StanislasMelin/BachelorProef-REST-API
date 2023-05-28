@@ -77,21 +77,7 @@ public class BookContentController {
     @GetMapping("/books/content")
     public CollectionModel<EntityModel<BookContent>> all() {
         log.info("Listing all book contents...");
-        List<BookContent> results = null;
-        try {
-            // Make asynchronous call to the service
-            CompletableFuture<List<BookContent>> completableFuture = fileStorageService.getAllFiles();
-
-            // Wait for it to be done calculating.. The heavy work happens in another thread.
-            // The service can handle other requests in the meantime.
-            CompletableFuture.allOf(completableFuture).join();
-
-            // Get the result of the async computation
-            results = completableFuture.get();
-
-        } catch(Exception ex) {
-            log.error(ex.getMessage());
-        }
+        List<BookContent> results = fileStorageService.getAllFiles();
 
         List<EntityModel<BookContent>> bookContents = results.stream()
                 .map(bookContent -> EntityModel.of(bookContent,

@@ -80,12 +80,9 @@ public class FileStorageService {
     }
 
     @Cacheable(value="bookContents")
-    @Async("taskExecutor")
-    public CompletableFuture<List<BookContent>> getAllFiles() {
+    public List<BookContent> getAllFiles() {
 
-        List<BookContent> results =  bookContentRepository.findAll();
-
-        return CompletableFuture.completedFuture(results);
+        return bookContentRepository.findAll();
     }
 
     @Caching(evict = {
